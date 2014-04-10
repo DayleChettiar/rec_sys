@@ -1,0 +1,42 @@
+>>> reload(recommendations)
+>>> print recommendations.sim_pearson(recommendations.critics,
+... 'Lisa Rose','Gene Seymour')
+
+>>> reload(recommendations)
+>>> recommendations.sim_distance(recommendations.critics,
+... 'Lisa Rose','Gene Seymour')
+
+>> reload(recommendations)
+>> recommendations.topMatches(recommendations.critics,'Toby',n=3)
+
+>>> reload(recommendations)
+>>> recommendations.getRecommendations(recommendations.critics,'Toby')
+
+>>> recommendations.getRecommendations(recommendations.critics,'Toby',
+... similarity=recommendations.sim_distance)
+
+item based recommendations:
+>> reload(recommendations)
+>> movies=recommendations.transformPrefs(recommendations.critics)
+>> recommendations.topMatches(movies,'Superman Returns')
+
+who gave the highest recommendations for a movie:
+>> recommendations.getRecommendations(movies,'Just My Luck')
+
+Movie lens data set:
+>>> reload(recommendations)
+>>> prefs=recommendations.loadMovieLens( )
+>>> prefs['87']
+
+user based recommendations:
+Now you can get user-based recommendations:
+>>> recommendations.getRecommendations(prefs,'87')[0:30]
+
+>>> itemsim=recommendations.calculateSimilarItems(prefs,n=50)
+
+>>> recommendations.getRecommendedItems(prefs,itemsim,'87')[0:30]
+
+
+
+
+
