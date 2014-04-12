@@ -198,3 +198,13 @@ def mean_abs_error(prefs,person1,person2):
                       for item in prefs[person1] if item in prefs[person2]])
 
   return sum_of_squares/n
+
+
+
+def getdistances(data,vec1):
+    distancelist=[]
+    for i in range(len(data)):
+        vec2=data[i]['input']
+        distancelist.append((euclidean(vec1,vec2),i))
+    distancelist.sort( )
+    return distancelist
