@@ -164,7 +164,7 @@ def getRecommendedItems(prefs,itemMatch,user):
   rankings.reverse( )
   return rankings
 
-def loadMovieLens(path='home/dayle/Desktop/python/data/rec_sys/movielens'):
+def loadMovieLens(path='/home/dayle/Desktop/python/data/rec_sys/movielens'):
   # Get movie titles
   movies={}
   for line in open(path+'/u.item'):
@@ -194,7 +194,7 @@ def mean_abs_error(prefs,person1,person2):
   n=len(si)
 
   # Add up the squares of all the differences
-  sum_of_squares=sum([pow(prefs[person1][item]-prefs[person2][item],1)
+  sum_of_squares=sum([abs(prefs[person1][item]-prefs[person2][item])
                       for item in prefs[person1] if item in prefs[person2]])
 
   return sum_of_squares/n
