@@ -164,7 +164,7 @@ def getRecommendedItems(prefs,itemMatch,user):
   rankings.reverse( )
   return rankings
 
-def loadMovieLens(path='/home/dayle/Desktop/python/data/rec_sys/movielens'):
+def loadMovieLens(path='C:\stuff\python\data\movielens'):
   # Get movie titles
   movies={}
   for line in open(path+'/u.item'):
@@ -208,3 +208,56 @@ def getdistances(data,vec1):
         distancelist.append((euclidean(vec1,vec2),i))
     distancelist.sort( )
     return distancelist
+
+
+def gaussian(dist,sigma=10.0):
+    return math.e**(-dist**2/(2*sigma**2))
+
+def weightedknn(data,vec1,k=5,weightf=gaussian):
+    # Get distances
+    dlist=getdistances(data,vec1)
+    avg=0.0
+    totalweight=0.0
+    # Get weighted average
+    for i in range(k):
+        dist=dlist[i][0]
+        idx=dlist[i][1]
+        weight=weightf(dist)
+        avg+=weight*data[idx]['result']
+        totalweight+=weight
+    avg=avg/totalweight
+    return avg
+
+
+def average_movie_rating(movie_id):
+    movie_name = movie_dict[str(movie_id)]['title']
+    if user_ratings.get(movie_name):
+        # average = sum getvalues / count getvalues??
+        total = 0
+        count = 0
+        for key in user_ratings[movie_name]:
+            total += user_ratings[movie_name][key]
+            count += 1
+        print ("%.2f" %round(total/count,2))
+    else:
+        print "No user ratings for this movie"
+
+	
+def knn(movie_ratings, predict_movie, prev_rated,num_neighbors):
+    #prev_rated is a dictionary of previously rated movies (movie_id: rating)
+    eucl_dist = {}
+    for k,v in prev_rated:
+        print prev_rated
+    eucl_dist[str(dist(movie_ratings,predict_movie,v))] = (k, v)
+   
+    # sort keys of eucl_dict
+    eucl_keys = [int(x) for x in eucl_dist.keys()]
+    sorted_keys = sorted(eucl_keys)
+
+    neighbors = sorted_keys[0:num_neighbors]
+    user_rating_total = 0
+    for neighbor in neighbors:
+        user_rating_total += eucl_dist[neighbor][1]
+    knn_est = user_rating_total/num_neighbors
+
+    return knn_est
