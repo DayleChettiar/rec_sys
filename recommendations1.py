@@ -20,6 +20,7 @@ critics={'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5,
 
 from numpy import *
 from math import sqrt
+from operator import itemgetter
 
 # Returns a distance-based similarity score for person1 and person2
 def sim_distance(prefs,person1,person2):
@@ -109,7 +110,6 @@ def getRecommendations(prefs,person,similarity=sim_pearson):
     # ignore scores of zero or lower
     if sim<=0: continue
     for item in prefs[other]:
-
       # only score movies I haven't seen yet
       if item not in prefs[person] or prefs[person][item]==0:
         # Similarity * Score
@@ -160,10 +160,8 @@ def getRecommendedItems(prefs,itemMatch,user):
   totalSim={}
   # Loop over items rated by this user
   for (item,rating) in userRatings.items( ):
-
     # Loop over items similar to this one
     for (similarity,item2) in itemMatch[item]:
-
       # Ignore if this user has already rated this item
       if item2 in userRatings: continue
       # Weighted sum of rating times similarity
@@ -197,46 +195,6 @@ def loadMovieLens(path='\home\dayle\Desktop\python\data\movielens'):
   return prefs
 
 
-# Returns the average absolute error between n pairs
-def mean_abs_error(prefs,person1,person2):
-  # Get the list of shared_items
-  si={}
-  for item in prefs[person1]:
-    if item in prefs[person2]: si[item]=1
-
-  # if they have no ratings in common, return 0
-  if len(si)==0: return 0
-
-  # Sum calculations
-  n=len(si)
-
-  # Add up the squares of all the differences
-  sum_of_items=sum([abs(prefs[person1][item]-prefs[person2][item])
-                      for item in prefs[person1] if item in prefs[person2]])
-
-  return sum_of_items/n
-
-
-#Compute Root Mean Squared Error. 
-def compute_rmse(prefs,person1,person2):
-    # Get the list of shared_items
-  si={}
-  for item in prefs[person1]:
-    if item in prefs[person2]: si[item]=1
-
-  # if they have no ratings in common, return 0
-  if len(si)==0: return 0
-
-  # Sum calculations
-  n=len(si)
-
-  # Add up the squares of all the differences
-  sum_of_squares=sum([pow(prefs[person1][item]-prefs[person2][item], 2)
-                      for item in prefs[person1] if item in prefs[person2]])
-  #return the computed RMSE
-  return np.sqrt(sum_of_squares/n)
-
-
 def getdistances(data,vec1):
     distancelist=[]
     for i in range(len(data)):
@@ -263,6 +221,31 @@ def weightedknn(data,vec1,k=5,weightf=gaussian):
         totalweight+=weight
     avg=avg/totalweight
     return avg
+
+#tf-idf section
+def freq(prefs, person):
+    return prefs.split(None).count(person)
+    
+def wordcount(prefs):
+    return len(prefs.split(None))
+    
+def numDocsContaining(prefs, person):
+    count=0
+    for preference in prefs:
+        if freq(preference, person)>0:
+            count+=1
+    return count
+
+def tf(prefs,  person):
+    return (freq(prefs, person) / float(wordcount(prefs)))
+    
+def idf(prefs, person):
+    return math.log(len(prefs) / float(numDocsContaining(prefs, person)))
+    
+    
+def tf_idf(prefs,person):
+    return (tf(prefs, person) * idf(prefs, person))
+
 
 #creates a sorted list of users based on their distance to username
 def compute_nearest_neighbor(username, users, k=3):
@@ -331,3 +314,41 @@ def knn(movie_ratings, predict_movie, prev_rated,num_neighbors=3):
     return knn_est
 
 
+# Returns the average absolute error between n pairs
+def mean_abs_error(prefs,person1,person2):
+  # Get the list of shared_items
+  si={}
+  for item in prefs[person1]:
+    if item in prefs[person2]: si[item]=1
+
+  # if they have no ratings in common, return 0
+  if len(si)==0: return 0
+
+  # Sum calculations
+  n=len(si)
+
+  # Add up the squares of all the differences
+  sum_of_items=sum([abs(prefs[person1][item]-prefs[person2][item])
+                      for item in prefs[person1] if item in prefs[person2]])
+
+  return sum_of_items/n
+
+
+#Compute Root Mean Squared Error. 
+def compute_rmse(prefs,person1,person2):
+    # Get the list of shared_items
+  si={}
+  for item in prefs[person1]:
+    if item in prefs[person2]: si[item]=1
+
+  # if they have no ratings in common, return 0
+  if len(si)==0: return 0
+
+  # Sum calculations
+  n=len(si)
+
+  # Add up the squares of all the differences
+  sum_of_squares=sum([pow(prefs[person1][item]-prefs[person2][item], 2)
+                      for item in prefs[person1] if item in prefs[person2]])
+  #return the computed RMSE
+  return np.sqrt(sum_of_squares/n)
