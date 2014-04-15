@@ -18,7 +18,7 @@ critics={'Lisa Rose': {'Lady in the Water': 2.5, 'Snakes on a Plane': 3.5,
 'The Night Listener': 3.0, 'Superman Returns': 5.0, 'You, Me and Dupree': 3.5},
 'Toby': {'Snakes on a Plane':4.5,'You, Me and Dupree':1.0,'Superman Returns':4.0}}
 
-
+from numpy import *
 from math import sqrt
 
 # Returns a distance-based similarity score for person1 and person2
@@ -69,6 +69,23 @@ def sim_pearson(prefs,p1,p2):
   r=num/den
 
   return r
+
+
+#Computes the Manhattan distance.
+def manhattan(prefs,p1,p2): 
+    distance = 0 
+    commonRatings = False
+    si={}
+    for item in prefs[p1]:
+        if item in prefs[p2]: 
+            si[item]=1
+            distance+=abs(prefs[p1][item]-prefs[p2][item])
+            commonRatings = True
+        if commonRatings:
+            return distance
+        else:
+            return -1
+
 
 # Returns the best matches for person from the prefs dictionary.
 # Number of results and similarity function are optional params.
@@ -164,7 +181,7 @@ def getRecommendedItems(prefs,itemMatch,user):
   rankings.reverse( )
   return rankings
 
-def loadMovieLens(path='C:\stuff\python\data\movielens'):
+def loadMovieLens(path='\home\dayle\Desktop\python\data\movielens'):
   # Get movie titles
   movies={}
   for line in open(path+'/u.item'):
@@ -194,11 +211,30 @@ def mean_abs_error(prefs,person1,person2):
   n=len(si)
 
   # Add up the squares of all the differences
-  sum_of_squares=sum([abs(prefs[person1][item]-prefs[person2][item])
+  sum_of_items=sum([abs(prefs[person1][item]-prefs[person2][item])
                       for item in prefs[person1] if item in prefs[person2]])
 
-  return sum_of_squares/n
+  return sum_of_items/n
 
+
+#Compute Root Mean Squared Error. 
+def compute_rmse(prefs,person1,person2):
+    # Get the list of shared_items
+  si={}
+  for item in prefs[person1]:
+    if item in prefs[person2]: si[item]=1
+
+  # if they have no ratings in common, return 0
+  if len(si)==0: return 0
+
+  # Sum calculations
+  n=len(si)
+
+  # Add up the squares of all the differences
+  sum_of_squares=sum([pow(prefs[person1][item]-prefs[person2][item], 2)
+                      for item in prefs[person1] if item in prefs[person2]])
+  #return the computed RMSE
+  return np.sqrt(sum_of_squares/n)
 
 
 def getdistances(data,vec1):
@@ -228,8 +264,40 @@ def weightedknn(data,vec1,k=5,weightf=gaussian):
     avg=avg/totalweight
     return avg
 
+#creates a sorted list of users based on their distance to username
+def compute_nearest_neighbor(username, users, k=3):
+    distances = [] 
+    for user in users: 
+        if user != username: 
+            distance = manhattan(users, username,  user) 
+            distances.append((distance, user)) 
+            # sort based on distance -- closest first
+            distances.sort() 
+    return distances[0:k]
+
 
 def average_movie_rating(movie_id):
+    movie_dict = {}
+    for line in open('/home/dayle/Desktop/python/data/rec_sys/movielens/u.item'):
+        split_line = line.split('|')
+        movie_dict[split_line[0]] = {
+            'title': split_line[1],
+            'release date': split_line[2],
+            'video release date': split_line[3],
+            'IMDB URL': split_line[4],
+        }
+
+    user_ratings = {}
+    for uline in open('/home/dayle/Desktop/python/data/rec_sys/movielens/u.data'):
+        split_uline = uline.split()
+        movie_name = movie_dict[split_uline[1]]['title']
+        if user_ratings.get(movie_name):
+            user_ratings[movie_name][split_uline[0]] = float(split_uline[2])
+        else:	
+            user_ratings[movie_name] = {
+                split_uline[0]: float(split_uline[2])
+             }
+    
     movie_name = movie_dict[str(movie_id)]['title']
     if user_ratings.get(movie_name):
         # average = sum getvalues / count getvalues??
@@ -238,12 +306,12 @@ def average_movie_rating(movie_id):
         for key in user_ratings[movie_name]:
             total += user_ratings[movie_name][key]
             count += 1
-        print ("%.2f" %round(total/count,2))
+        print ("Average movie rating for %s is %.2f" %(movie_name,  round(total/count,2)))
     else:
         print "No user ratings for this movie"
 
 	
-def knn(movie_ratings, predict_movie, prev_rated,num_neighbors):
+def knn(movie_ratings, predict_movie, prev_rated,num_neighbors=3):
     #prev_rated is a dictionary of previously rated movies (movie_id: rating)
     eucl_dist = {}
     for k,v in prev_rated:
@@ -261,3 +329,5 @@ def knn(movie_ratings, predict_movie, prev_rated,num_neighbors):
     knn_est = user_rating_total/num_neighbors
 
     return knn_est
+
+
